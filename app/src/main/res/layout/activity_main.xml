@@ -20,7 +20,7 @@
 
     <View
         android:id="@+id/playback_view"
-        android:layout_width="419dp"
+        android:layout_width="0dp"
         android:layout_height="139dp"
         android:background="#B576E5F3"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -46,13 +46,13 @@
 
     <Button
         android:id="@+id/resume"
-        android:layout_width="250px"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:backgroundTint="#08EF11"
         android:text="Resume"
         app:layout_constraintBottom_toBottomOf="@+id/playback_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.05"
+        app:layout_constraintHorizontal_bias="0.023"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/playback_view"
         app:layout_constraintVertical_bias="0.846" />
@@ -65,27 +65,27 @@
         android:text="Play"
         app:layout_constraintBottom_toBottomOf="@+id/playback_view"
         app:layout_constraintEnd_toEndOf="@+id/playback_view"
-        app:layout_constraintHorizontal_bias="0.073"
+        app:layout_constraintHorizontal_bias="0.042"
         app:layout_constraintStart_toEndOf="@+id/resume"
         app:layout_constraintTop_toTopOf="@+id/playback_view"
         app:layout_constraintVertical_bias="0.846" />
 
     <Button
         android:id="@+id/pause"
-        android:layout_width="220px"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:backgroundTint="#BF8125"
         android:text="Pause"
         app:layout_constraintBottom_toBottomOf="@+id/playback_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.121"
+        app:layout_constraintHorizontal_bias="0.086"
         app:layout_constraintStart_toEndOf="@+id/play"
         app:layout_constraintTop_toTopOf="@+id/playback_view"
         app:layout_constraintVertical_bias="0.846" />
 
     <Button
         android:id="@+id/stop"
-        android:layout_width="200px"
+        android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:backgroundTint="#AF1A1A"
         android:text="Stop"
