@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <View
+        android:id="@+id/service_view"
+        android:layout_width="414dp"
+        android:layout_height="71dp"
+        android:background="#BCECD07F"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.131" />
+
+    <View
+        android:id="@+id/playback_view"
+        android:layout_width="417dp"
+        android:layout_height="91dp"
+        android:background="#B576E5F3"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/service_view"
+        app:layout_constraintVertical_bias="0.303" />
+
+    <Switch
+        android:id="@+id/start_service"
+        android:layout_width="276dp"
+        android:layout_height="49dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="Start Service"
+        android:textAlignment="center"
+        android:textOff="Stop"
+        android:textOn="Start"
+        android:textSize="24sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="@+id/service_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/service_view"
+        app:layout_constraintTop_toTopOf="@+id/service_view" />
+
+    <Button
+        android:id="@+id/resume"
+        android:layout_width="250px"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#08EF11"
+        android:text="Resume"
+        app:layout_constraintBottom_toBottomOf="@+id/playback_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/playback_view"
+        app:layout_constraintVertical_bias="0.496" />
+
+    <Button
+        android:id="@+id/play"
+        android:layout_width="200px"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#038108"
+        android:text="Play"
+        app:layout_constraintBottom_toBottomOf="@+id/playback_view"
+        app:layout_constraintEnd_toEndOf="@+id/playback_view"
+        app:layout_constraintHorizontal_bias="0.071"
+        app:layout_constraintStart_toEndOf="@+id/resume"
+        app:layout_constraintTop_toTopOf="@+id/playback_view"
+        app:layout_constraintVertical_bias="0.488" />
+
+    <Button
+        android:id="@+id/pause"
+        android:layout_width="220px"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#BF8125"
+        android:text="Pause"
+        app:layout_constraintBottom_toBottomOf="@+id/playback_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.124"
+        app:layout_constraintStart_toEndOf="@+id/play"
+        app:layout_constraintTop_toTopOf="@+id/playback_view"
+        app:layout_constraintVertical_bias="0.488" />
+
+    <Button
+        android:id="@+id/stop"
+        android:layout_width="200px"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#AF1A1A"
+        android:text="Stop"
+        app:layout_constraintBottom_toBottomOf="@+id/playback_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/pause"
+        app:layout_constraintTop_toTopOf="@+id/playback_view" />
+</androidx.constraintlayout.widget.ConstraintLayout>
