@@ -195,6 +195,7 @@ import com.jjasan2.clipserver.ClipServerServices;
         protected void enableButtons(Status status){
             switch (status){
                 case SERVICE_STARTED:
+                    songIndex.setEnabled(true);
                     play.setEnabled(false);
                     pause.setEnabled(false);
                     resume.setEnabled(false);
@@ -205,12 +206,14 @@ import com.jjasan2.clipserver.ClipServerServices;
                     playback_view.setVisibility(View.INVISIBLE);
                     break;
                 case PLAYING:
+                    songIndex.setEnabled(false);
                     play.setEnabled(false);
                     pause.setEnabled(true);
                     resume.setEnabled(false);
                     stop.setEnabled(true);
                     break;
                 case PAUSED:
+                    songIndex.setEnabled(true);
                     play.setEnabled(true);
                     pause.setEnabled(false);
                     stop.setEnabled(true);
