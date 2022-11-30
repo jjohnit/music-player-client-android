@@ -44,6 +44,8 @@ import com.jjasan2.clipserver.ClipServerServices;
 
         // Enum for statuses
         Status status;
+        // Flag for disabling the resume button in initial playback
+        boolean initial_playback = true;
 
         // aidl class for connecting to clip server
         ClipServerServices clipServerServices;
@@ -119,7 +121,11 @@ import com.jjasan2.clipserver.ClipServerServices;
         stop.setOnClickListener(v -> {
             try {
                 Log.i(TAG, "Stop button clicked : " + clipServerServices.stop());
-                bindService(false);
+                Toast.makeText(this, "Playback will be stopped", Toast.LENGTH_LONG).show();
+                // Unbind the service on stop
+                start_service.setChecked(false);
+                // Flag for disabling the resume button in initial playback
+                initial_playback = true;
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -173,6 +179,7 @@ import com.jjasan2.clipserver.ClipServerServices;
         }
         else {
             unbindService(this.mConnection);
+            enableButtons(Status.SERVICE_STOPPED);
             Log.i(TAG, "Service unbinded");
             return true;
         }
@@ -206,8 +213,13 @@ import com.jjasan2.clipserver.ClipServerServices;
                 case PAUSED:
                     play.setEnabled(true);
                     pause.setEnabled(false);
-                    resume.setEnabled(true);
                     stop.setEnabled(true);
+                    if(initial_playback){
+                        resume.setEnabled(false);
+                        initial_playback = false;
+                    }
+                    else
+                        resume.setEnabled(true);
                     break;
             }
         }
