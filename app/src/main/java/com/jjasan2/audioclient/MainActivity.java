@@ -70,14 +70,24 @@ import com.jjasan2.clipserver.ClipServerServices;
                 if(bindService(true)) {
                     // Show the playback buttons when service is started
                     enableButtons(Status.SERVICE_STARTED);
+                    status = Status.SERVICE_BINDED;
                     Log.i(TAG, "Service started");
                 }
             }
             else {
+                Toast.makeText(this, "Playback will be stopped", Toast.LENGTH_LONG).show();
                 // Unbind the service on stop service
                 bindService(false);
+                // Stop the service
+                try {
+                    clipServerServices.stopService();
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+
                 // Hide the playback buttons when service is stopped
                 enableButtons(Status.SERVICE_STOPPED);
+                status = Status.SERVICE_STOPPED;
                 Log.i(TAG, "Service stopped");
             }
         });
@@ -101,6 +111,9 @@ import com.jjasan2.clipserver.ClipServerServices;
 
         play.setOnClickListener(v -> {
             try {
+                if(status != Status.SERVICE_BINDED){
+                    bindService(true);
+                }
                 clipServerServices.play(Integer.parseInt(songIndex.getText().toString()));
                 enableButtons(Status.PLAYING);
                 Log.i(TAG, "Play button clicked");
@@ -121,11 +134,9 @@ import com.jjasan2.clipserver.ClipServerServices;
         stop.setOnClickListener(v -> {
             try {
                 Log.i(TAG, "Stop button clicked : " + clipServerServices.stop());
-                Toast.makeText(this, "Playback will be stopped", Toast.LENGTH_LONG).show();
                 // Unbind the service on stop
-                start_service.setChecked(false);
-                // Flag for disabling the resume button in initial playback
-                initial_playback = true;
+                bindService(false);
+                enableButtons(Status.SERVICE_STARTED);
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -144,16 +155,32 @@ import com.jjasan2.clipserver.ClipServerServices;
     private final ServiceConnection mConnection = new ServiceConnection() {
 
         public void onServiceConnected(ComponentName className, IBinder iService) {
-
             clipServerServices = ClipServerServices.Stub.asInterface(iService);
+//            try {
+//                clipServerServices.startService();
+//            } catch (RemoteException e) {
+//                e.printStackTrace();
+//            }
             status = Status.SERVICE_STARTED;
+            Log.i(TAG, "onServiceConnected: ");
         }
 
         public void onServiceDisconnected(ComponentName className) {
-
             clipServerServices = null;
             status = Status.SERVICE_STOPPED;
+            Log.i(TAG, "onServiceDisconnected : Service stopped");
+        }
 
+        @Override
+        public void onBindingDied(ComponentName name) {
+            ServiceConnection.super.onBindingDied(name);
+            Log.i(TAG, "onBindingDied: ");
+        }
+
+        @Override
+        public void onNullBinding(ComponentName name) {
+            ServiceConnection.super.onNullBinding(name);
+            Log.i(TAG, "onNullBinding: ");
         }
     };
 
@@ -165,7 +192,7 @@ import com.jjasan2.clipserver.ClipServerServices;
             ResolveInfo info = getPackageManager().resolveService(i, PackageManager.MATCH_ALL);
             i.setComponent(new ComponentName(info.serviceInfo.packageName, info.serviceInfo.name));
 
-            bindStatus = bindService(i, this.mConnection, Context.BIND_AUTO_CREATE);
+            bindStatus = bindService(i, this.mConnection, 0);
             if (bindStatus) {
                 status = Status.SERVICE_BINDED;
                 Log.i(TAG, "bindService() succeeded!");
@@ -178,9 +205,14 @@ import com.jjasan2.clipserver.ClipServerServices;
             }
         }
         else {
-            unbindService(this.mConnection);
-            enableButtons(Status.SERVICE_STOPPED);
-            Log.i(TAG, "Service unbinded");
+            if(status == Status.SERVICE_BINDED){
+                unbindService(this.mConnection);
+                Log.i(TAG, "Service unbinded");
+            }
+            // Flag for disabling the resume button in initial playback
+            initial_playback = true;
+            status = Status.SERVICE_UNBINDED;
+            enableButtons(Status.SERVICE_STARTED);
             return true;
         }
     }
@@ -200,6 +232,7 @@ import com.jjasan2.clipserver.ClipServerServices;
                     pause.setEnabled(false);
                     resume.setEnabled(false);
                     stop.setEnabled(false);
+                    songIndex.setText("");
                     playback_view.setVisibility(View.VISIBLE);
                     break;
                 case SERVICE_STOPPED:
