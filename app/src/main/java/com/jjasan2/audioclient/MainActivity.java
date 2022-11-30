@@ -11,10 +11,14 @@ import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.jjasan2.clipserver.ClipServerServices;
 
@@ -29,12 +33,19 @@ import com.jjasan2.clipserver.ClipServerServices;
 
     public class MainActivity extends AppCompatActivity {
 
+        // For logging
         protected final String TAG = "appDebug";
+
+        // Declare views
         Button play, pause, resume, stop;
         EditText songIndex;
+        View playback_view;
         Switch start_service;
 
+        // Enum for statuses
         Status status;
+
+        // aidl class for connecting to clip server
         ClipServerServices clipServerServices;
 
     @Override
@@ -42,29 +53,55 @@ import com.jjasan2.clipserver.ClipServerServices;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Assign the values for views
         start_service = findViewById(R.id.start_service);
         songIndex = findViewById(R.id.clip_number);
+        playback_view = findViewById(R.id.playback_view);
         play = findViewById(R.id.play);
         pause = findViewById(R.id.pause);
         resume = findViewById(R.id.resume);
         stop = findViewById(R.id.stop);
 
+        // Start or stop service based on the change in toggle button.
         start_service.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if(isChecked){
-                Log.i(TAG, "Service started");
+                if(bindService(true)) {
+                    // Show the playback buttons when service is started
+                    enableButtons(Status.SERVICE_STARTED);
+                    Log.i(TAG, "Service started");
+                }
             }
             else {
+                // Unbind the service on stop service
+                bindService(false);
+                // Hide the playback buttons when service is stopped
+                enableButtons(Status.SERVICE_STOPPED);
                 Log.i(TAG, "Service stopped");
+            }
+        });
+
+        // Enable playback buttons only when when the user adds a clip number
+        songIndex.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String clipNumberText = songIndex.getText().toString();
+                // When the input is valid, enable the necessary buttons
+                if (clipNumberText.length() > 0 && Integer.parseInt(clipNumberText) > 0)
+                    enableButtons(Status.PAUSED);
             }
         });
 
         play.setOnClickListener(v -> {
             try {
-                String indextext =songIndex.getText().toString();
-                if (indextext.length() > 0 && Integer.parseInt(indextext) > 0) {
-                    clipServerServices.play(Integer.parseInt(indextext));
-                }
-                Log.i(TAG, "Play button clicked : " + indextext);
+                clipServerServices.play(Integer.parseInt(songIndex.getText().toString()));
+                enableButtons(Status.PLAYING);
+                Log.i(TAG, "Play button clicked");
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -73,6 +110,7 @@ import com.jjasan2.clipserver.ClipServerServices;
         pause.setOnClickListener(v -> {
             try {
                 Log.i(TAG, "Pause button clicked : " + clipServerServices.pause());
+                enableButtons(Status.PAUSED);
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -81,6 +119,7 @@ import com.jjasan2.clipserver.ClipServerServices;
         stop.setOnClickListener(v -> {
             try {
                 Log.i(TAG, "Stop button clicked : " + clipServerServices.stop());
+                bindService(false);
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -89,6 +128,7 @@ import com.jjasan2.clipserver.ClipServerServices;
         resume.setOnClickListener(v -> {
             try {
                 Log.i(TAG, "Resume button clicked : " + clipServerServices.resume());
+                enableButtons(Status.PLAYING);
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -111,26 +151,64 @@ import com.jjasan2.clipserver.ClipServerServices;
         }
     };
 
-    protected void bindService() {
-        Intent i = new Intent(ClipServerServices.class.getName());
+    protected boolean bindService(boolean bind) {
+        boolean bindStatus;
+        if(bind){
+            Intent i = new Intent(ClipServerServices.class.getName());
 
-        ResolveInfo info = getPackageManager().resolveService(i, PackageManager.MATCH_ALL);
-        i.setComponent(new ComponentName(info.serviceInfo.packageName, info.serviceInfo.name));
+            ResolveInfo info = getPackageManager().resolveService(i, PackageManager.MATCH_ALL);
+            i.setComponent(new ComponentName(info.serviceInfo.packageName, info.serviceInfo.name));
 
-        boolean bindStatus = bindService(i, this.mConnection, Context.BIND_AUTO_CREATE);
-        if (bindStatus) {
-            status = Status.SERVICE_BINDED;
-            Log.i(TAG, "bindService() succeeded!");
-        } else {
-            status = Status.SERVICE_UNBINDED;
-            Log.i(TAG, "bindService() failed!");
+            bindStatus = bindService(i, this.mConnection, Context.BIND_AUTO_CREATE);
+            if (bindStatus) {
+                status = Status.SERVICE_BINDED;
+                Log.i(TAG, "bindService() succeeded!");
+                return true;
+            } else {
+                status = Status.SERVICE_UNBINDED;
+                Log.i(TAG, "bindService() failed!");
+                Toast.makeText(this, "Binding service failed", Toast.LENGTH_LONG).show();
+                return false;
+            }
+        }
+        else {
+            unbindService(this.mConnection);
+            Log.i(TAG, "Service unbinded");
+            return true;
         }
     }
 
-        @Override
-        protected void onStart() {
-            super.onStart();
+//        @Override
+//        protected void onStart() {
+//            super.onStart();
+//
+//            bindService();
+//        }
 
-            bindService();
+        protected void enableButtons(Status status){
+            switch (status){
+                case SERVICE_STARTED:
+                    play.setEnabled(false);
+                    pause.setEnabled(false);
+                    resume.setEnabled(false);
+                    stop.setEnabled(false);
+                    playback_view.setVisibility(View.VISIBLE);
+                    break;
+                case SERVICE_STOPPED:
+                    playback_view.setVisibility(View.INVISIBLE);
+                    break;
+                case PLAYING:
+                    play.setEnabled(false);
+                    pause.setEnabled(true);
+                    resume.setEnabled(false);
+                    stop.setEnabled(true);
+                    break;
+                case PAUSED:
+                    play.setEnabled(true);
+                    pause.setEnabled(false);
+                    resume.setEnabled(true);
+                    stop.setEnabled(true);
+                    break;
+            }
         }
     }
