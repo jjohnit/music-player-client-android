@@ -68,9 +68,13 @@ import com.jjasan2.clipserver.ClipServerServices;
         start_service.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if(isChecked){
                 if(bindService(true)) {
+                    try {
+                        if (clipServerServices != null) clipServerServices.startService();
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                     // Show the playback buttons when service is started
                     enableButtons(Status.SERVICE_STARTED);
-                    status = Status.SERVICE_BINDED;
                     Log.i(TAG, "Service started");
                 }
             }
@@ -80,7 +84,7 @@ import com.jjasan2.clipserver.ClipServerServices;
                 bindService(false);
                 // Stop the service
                 try {
-                    clipServerServices.stopService();
+                    if(clipServerServices != null) clipServerServices.stopService();
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
@@ -114,9 +118,16 @@ import com.jjasan2.clipserver.ClipServerServices;
                 if(status != Status.SERVICE_BINDED){
                     bindService(true);
                 }
-                clipServerServices.play(Integer.parseInt(songIndex.getText().toString()));
-                enableButtons(Status.PLAYING);
-                Log.i(TAG, "Play button clicked");
+                if(clipServerServices != null){
+                    boolean isPlaying = clipServerServices.play(Integer.parseInt(songIndex.getText().toString()));
+                    if (!isPlaying){
+                        Toast.makeText(this, "Enter a valid input", Toast.LENGTH_LONG).show();
+                    }
+                    else {
+                        enableButtons(Status.PLAYING);
+                        Log.i(TAG, "Play button clicked");
+                    }
+                }
             } catch (RemoteException e) {
                 Log.i(TAG, e.toString());
             }
@@ -156,11 +167,6 @@ import com.jjasan2.clipserver.ClipServerServices;
 
         public void onServiceConnected(ComponentName className, IBinder iService) {
             clipServerServices = ClipServerServices.Stub.asInterface(iService);
-//            try {
-//                clipServerServices.startService();
-//            } catch (RemoteException e) {
-//                e.printStackTrace();
-//            }
             status = Status.SERVICE_STARTED;
             Log.i(TAG, "onServiceConnected: ");
         }
@@ -168,19 +174,16 @@ import com.jjasan2.clipserver.ClipServerServices;
         public void onServiceDisconnected(ComponentName className) {
             clipServerServices = null;
             status = Status.SERVICE_STOPPED;
-            Log.i(TAG, "onServiceDisconnected : Service stopped");
+            Log.i(TAG, "************ onServiceDisconnected : Service stopped");
         }
 
         @Override
         public void onBindingDied(ComponentName name) {
             ServiceConnection.super.onBindingDied(name);
-            Log.i(TAG, "onBindingDied: ");
-        }
-
-        @Override
-        public void onNullBinding(ComponentName name) {
-            ServiceConnection.super.onNullBinding(name);
-            Log.i(TAG, "onNullBinding: ");
+            Log.i(TAG, "************ onBindingDied: " + status.toString());
+            // Rebind if binding is dead
+            bindService(false);
+            bindService(true);
         }
     };
 
@@ -195,17 +198,16 @@ import com.jjasan2.clipserver.ClipServerServices;
             bindStatus = bindService(i, this.mConnection, 0);
             if (bindStatus) {
                 status = Status.SERVICE_BINDED;
-                Log.i(TAG, "bindService() succeeded!");
+                Log.i(TAG, "service binded");
                 return true;
             } else {
                 status = Status.SERVICE_UNBINDED;
                 Log.i(TAG, "bindService() failed!");
-                Toast.makeText(this, "Binding service failed", Toast.LENGTH_LONG).show();
                 return false;
             }
         }
         else {
-            if(status == Status.SERVICE_BINDED){
+            if(status != Status.SERVICE_UNBINDED){
                 unbindService(this.mConnection);
                 Log.i(TAG, "Service unbinded");
             }
@@ -224,6 +226,7 @@ import com.jjasan2.clipserver.ClipServerServices;
 //            bindService();
 //        }
 
+        // To show/hide buttons & views based on the status
         protected void enableButtons(Status status){
             switch (status){
                 case SERVICE_STARTED:
