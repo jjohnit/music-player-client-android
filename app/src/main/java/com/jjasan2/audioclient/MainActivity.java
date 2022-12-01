@@ -262,4 +262,10 @@ import com.jjasan2.clipserver.ClipServerServices;
                     break;
             }
         }
+
+        @Override
+        protected void onDestroy() {
+            super.onDestroy();
+            bindService(false);
+        }
     }
